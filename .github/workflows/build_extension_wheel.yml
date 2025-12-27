@@ -19,7 +19,8 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
-        python-version: ["3.11", "3.12", "3.13"]
+        python-version: ["3.11", "3.12"]
+        # python-version: ["3.11", "3.12", "3.13"]
         include:
           - python-version: "3.11"
             py-tag: "cp311-*"
