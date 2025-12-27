@@ -26,8 +26,8 @@ jobs:
             py-tag: "cp311-*"
           - python-version: "3.12"
             py-tag: "cp312-*"
-          - python-version: "3.13"
-            py-tag: "cp313-*"
+          # - python-version: "3.13"
+          #   py-tag: "cp313-*"
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
