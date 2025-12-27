@@ -1,0 +1,95 @@
+name: Shared Meson Wheel Builder
+
+on:
+  workflow_call:
+    inputs:
+      package_name:
+        description: 'The name of the package for artifact naming'
+        required: true
+        type: string
+
+permissions:
+  id-token: write
+  contents: write
+
+jobs:
+  build_wheels:
+    name: Build on ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python-version: ["3.11", "3.12", "3.13"]
+        # Map python-version to CIBW tags
+        include:
+          - python-version: "3.11"
+            py-tag: "cp311-*"
+          - python-version: "3.12"
+            py-tag: "cp312-*"
+          - python-version: "3.13"
+            py-tag: "cp313-*"
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Update submodules (recursive)
+        run: |
+          git submodule sync --recursive
+          git submodule update --init --recursive --remote
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+
+      - name: Install build tools
+        run: pip install cibuildwheel==2.21.3 meson-python meson ninja
+
+      - name: Build wheels
+        run: python -m cibuildwheel --output-dir wheelhouse
+        env:
+          CIBW_BUILD: ${{ matrix.py-tag }}
+          CIBW_ENVIRONMENT: >
+            MESONPY_EDITABLE_VERBOSE=1
+          CIBW_BEFORE_BUILD: pip install meson-python meson ninja
+          # Ensure macOS builds are for the correct architectures
+          CIBW_ARCHS_MACOS: "x86_64 arm64"
+
+      - name: Upload wheels
+        uses: actions/upload-artifact@v4
+        with:
+          # Unique name per matrix job to prevent collisions
+          name: ${{ inputs.package_name }}-${{ matrix.os }}-${{ matrix.python-version }}-wheels
+          path: wheelhouse/*.whl
+
+  publish_release:
+    needs: [build_wheels]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all wheels
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          pattern: *-wheels
+          merge-multiple: true
+
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          # If it's a tag, use it. If it's a branch (like main), use 'latest'.
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || 'latest' }}
+          # This helps distinguish the "Latest" release from official ones in the UI
+          name: ${{ github.ref_type == 'tag' && github.ref_name || 'Latest Development Build' }}
+          files: dist/*.whl
+          make_latest: "true"
+          # Optional: Mark branch pushes as "Pre-release" so they don't look official
+          prerelease: ${{ github.ref_type != 'tag' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  
