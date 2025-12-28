@@ -50,7 +50,15 @@ jobs:
           CIBW_BUILD: ${{ matrix.py-tag }}
           CIBW_ENVIRONMENT: MESONPY_EDITABLE_VERBOSE=1
           CIBW_BEFORE_BUILD: pip install meson-python meson ninja
+          CIBW_ARCHS_LINUX: "auto"
           CIBW_ARCHS_MACOS: "x86_64 arm64"
+          # --- PYTEST INTEGRATION ---
+          # 1. Install pytest (and other test deps) before running tests
+          CIBW_TEST_REQUIRES: pytest
+          # 2. Run the test command. 
+          # {project} refers to the root of your repo inside the build container.
+          CIBW_TEST_COMMAND: pytest {project}/tests
+          
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
