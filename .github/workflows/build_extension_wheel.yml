@@ -13,8 +13,28 @@ permissions:
   contents: write
 
 jobs:
+  fast_test:
+    name: Quick Test (Linux)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: 'pip'
+      - name: Install Build Deps
+        run: pip install meson-python meson ninja pytest
+      - name: Build & Install Extension
+        # This compiles the C++ code locally on the runner
+        run: pip install -e .
+      - name: Run Pytest
+        run: python -m pytest tests
+
   build_wheels:
     name: Build on ${{ matrix.os }}
+    needs: [fast_test] # ONLY run if the quick test passes!
     strategy:
       fail-fast: false
       matrix:
@@ -58,7 +78,7 @@ jobs:
           # 2. Run the test command. 
           # {project} refers to the root of your repo inside the build container.
           CIBW_TEST_COMMAND: pytest {project}/tests
-          
+
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
