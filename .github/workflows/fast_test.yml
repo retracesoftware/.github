@@ -1,0 +1,24 @@
+name: Run tests on Linux
+
+on:
+  workflow_call:
+
+jobs:
+  fast_test:
+    name: Quick Test (Linux)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: 'pip'
+      - name: Install Build Deps
+        run: pip install meson-python meson ninja pytest
+      - name: Build & Install Extension
+        # This compiles the C++ code locally on the runner
+        run: pip install -e .
+      - name: Run Pytest
+        run: python -m pytest tests
