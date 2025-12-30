@@ -20,7 +20,6 @@ jobs:
       - name: Build & Install Extension
         # This compiles the C++ code locally on the runner
         run: |
-          pip install meson ninja
-          pip install -e .
+          pip install -e . --no-build-isolation
       - name: Run Pytest
         run: python -m pytest tests
