@@ -16,7 +16,7 @@ jobs:
           python-version: "3.11"
           cache: 'pip'
       - name: Install Build Deps
-        run: pip install meson-python meson ninja pytest
+        run: pip install meson-python meson ninja pytest versioningit
       - name: Build & Install Extension
         # This compiles the C++ code locally on the runner
         run: |
