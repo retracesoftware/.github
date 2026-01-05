@@ -1,0 +1,56 @@
+name: Bump Version
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump-type:
+        description: 'Part of the version to bump'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. Generate the Retrace Bot Token
+      - name: Generate Retrace Bot Token
+        id: retrace-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.RETRACE_APP_ID }}
+          private-key: ${{ secrets.RETRACE_PRIVATE_KEY }}
+
+      # 2. Checkout with the App Token
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ steps.retrace-token.outputs.token }}
+          persist-credentials: false # Ensures git uses the token provided above
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          
+      - name: Install bump-my-version
+        run: pip install bump-my-version
+        
+      # 3. Bump using Bot Identity
+      - name: Bump Version
+        run: |
+          # Uses the bot identity for the commit
+          git config --global user.name "${{ steps.retrace-token.outputs.app-slug }}[bot]"
+          git config --global user.email "${{ steps.retrace-token.outputs.app-slug }}[bot]@users.noreply.github.com"
+          
+          bump-my-version bump ${{ github.event.inputs.bump-type }}
+          
+      # 4. Push as the App
+      - name: Push changes
+        if: success()
+        run: git push origin main --tags
