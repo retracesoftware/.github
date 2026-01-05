@@ -1,0 +1,150 @@
+name: Shared Meson Wheel Builder
+
+on:
+  workflow_call:
+    inputs:
+      package_name:
+        description: 'The name of the package for artifact naming'
+        required: true
+        type: string
+      bump_type:
+        description: 'major, minor, or patch'
+        required: true
+        type: string
+        default: 'patch'
+    secrets:
+      RETRACE_APP_ID:
+        required: true
+      RETRACE_PRIVATE_KEY:
+        required: true
+
+permissions:
+  id-token: write
+  contents: write
+
+jobs:
+  # --- NEW JOB: BUMP VERSION ---
+  bump_version:
+    name: Bump Version & Tag
+    runs-on: ubuntu-latest
+    outputs:
+      new_tag: ${{ steps.tag_output.outputs.tag }}
+    steps:
+      - name: Generate Retrace Bot Token
+        id: retrace-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.RETRACE_APP_ID }}
+          private-key: ${{ secrets.RETRACE_PRIVATE_KEY }}
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ steps.retrace-token.outputs.token }}
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Bump & Push
+        id: tag_output
+        run: |
+          pip install bump-my-version
+          git config --global user.name "${{ steps.retrace-token.outputs.app-slug }}[bot]"
+          git config --global user.email "${{ steps.retrace-token.outputs.app-slug }}[bot]@users.noreply.github.com"
+          
+          bump-my-version bump ${{ inputs.bump_type }}
+          
+          # Get the new tag name (assuming it starts with v)
+          NEW_TAG=$(git describe --tags --abbrev=0)
+          echo "tag=$NEW_TAG" >> $GITHUB_OUTPUT
+          
+          git push origin main --tags
+
+  # --- MODIFIED: FAST TEST ---
+  fast_test:
+    name: Quick Test (Linux)
+    needs: [bump_version]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.bump_version.outputs.new_tag }} # Test the bumped code
+          submodules: recursive
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: 'pip'
+      - name: Install Build Deps
+        run: pip install meson-python meson ninja pytest
+      - name: Build & Install Extension
+        run: pip install -e .
+      - name: Run Pytest
+        run: python -m pytest tests
+
+  # --- MODIFIED: BUILD WHEELS ---
+  build_wheels:
+    name: Build on ${{ matrix.os }}
+    needs: [bump_version, fast_test]
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest]
+        python-version: ["3.11", "3.12"]
+        include:
+          - python-version: "3.11"
+            py-tag: "cp311-*"
+          - python-version: "3.12"
+            py-tag: "cp312-*"
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.bump_version.outputs.new_tag }} # Build from the tag
+          submodules: recursive
+          fetch-depth: 0
+      - name: Update submodules
+        run: |
+          git submodule sync --recursive
+          git submodule update --init --recursive --remote
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install build tools
+        run: pip install cibuildwheel==2.21.3 meson-python meson ninja
+      - name: Build wheels
+        run: python -m cibuildwheel --output-dir wheelhouse
+        env:
+          CIBW_BUILD: ${{ matrix.py-tag }}
+          CIBW_ENVIRONMENT: MESONPY_EDITABLE_VERBOSE=1
+          CIBW_BEFORE_BUILD: pip install meson-python meson ninja
+          CIBW_TEST_REQUIRES: pytest
+          CIBW_TEST_COMMAND: pytest {project}/tests
+      - name: Upload wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.package_name }}-${{ matrix.os }}-${{ matrix.python-version }}-wheels
+          path: wheelhouse/*.whl
+
+  # --- MODIFIED: PUBLISH RELEASE ---
+  publish_release:
+    needs: [bump_version, build_wheels]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all wheels
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          pattern: "*-wheels"
+          merge-multiple: true
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.bump_version.outputs.new_tag }}
+          name: Release ${{ needs.bump_version.outputs.new_tag }}
+          files: dist/*.whl
+          make_latest: "true"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
