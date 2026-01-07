@@ -76,6 +76,9 @@ jobs:
       - name: Install build tools
         run: pip install cibuildwheel==2.21.3 meson-python meson ninja setuptools_scm
 
+      - name: Print version
+        run: python -m setuptools_scm
+        
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
