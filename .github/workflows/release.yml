@@ -83,6 +83,8 @@ jobs:
         run: pip install -e . --no-build-isolation
       - name: Run Pytest
         run: python -m pytest tests -vv -rs
+        env:
+          PYTHONPATH: .
         # env:
         #   PYTHONPATH: ${{ github.workspace }}
 
