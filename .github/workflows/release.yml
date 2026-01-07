@@ -81,6 +81,12 @@ jobs:
         run: pip install meson-python meson ninja pytest
       - name: Build & Install Extension
         run: pip install -e . --no-build-isolation
+        
+      - name: Debug Namespace
+        run: |
+          python -c "import sys; print('\n'.join(sys.path))"
+          python -c "import retracesoftware; print('Namespace paths:', retracesoftware.__path__)"
+
       - name: Run Pytest
         run: python -m pytest tests -vv -rs
         env:
