@@ -80,7 +80,7 @@ jobs:
       - name: Install Build Deps
         run: pip install meson-python meson ninja pytest
       - name: Build & Install Extension
-        run: pip install -e .
+        run: pip install -e . --no-build-isolation
       - name: Run Pytest
         run: python -m pytest tests
 
