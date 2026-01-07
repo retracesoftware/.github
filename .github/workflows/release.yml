@@ -82,7 +82,7 @@ jobs:
       - name: Build & Install Extension
         run: pip install -e . --no-build-isolation
       - name: Run Pytest
-        run: python -m pytest tests
+        run: python -m pytest tests -vv
 
   # --- MODIFIED: BUILD WHEELS ---
   build_wheels:
