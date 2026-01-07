@@ -80,8 +80,9 @@ jobs:
       - name: Install Build Deps
         run: pip install meson-python meson ninja pytest
       - name: Build & Install Extension
-        run: pip install -e . --no-build-isolation
-        
+        # run: pip install -e . --no-build-isolation
+        run: pip install . --no-build-isolation
+
       - name: Debug Namespace
         run: |
           python -c "import sys; print('\n'.join(sys.path))"
