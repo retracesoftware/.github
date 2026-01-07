@@ -1,0 +1,84 @@
+name: Shared Bump Version and Tag
+
+on:
+  workflow_call:
+    inputs:
+      level:
+        description: 'Version bump level (major, minor, patch)'
+        required: true
+        type: string
+    secrets:
+      app-id:
+        description: 'GitHub App ID for authentication'
+        required: true
+      private-key:
+        description: 'GitHub App private key'
+        required: true
+
+jobs:
+  bump-and-tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.app-id }}
+          private-key: ${{ secrets.private-key }}
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Get current version from git describe
+        id: current
+        run: |
+          CURRENT=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "current_tag=$CURRENT" >> $GITHUB_OUTPUT
+          echo "Current latest tag: $CURRENT"
+
+      - name: Calculate next version
+        id: semver
+        run: |
+          LEVEL=${{ inputs.level }}
+          TAG=${{ steps.current.outputs.current_tag }}
+          VERSION=${TAG#v}
+          
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+          
+          if [ "$LEVEL" = "major" ]; then
+            MAJOR=$((MAJOR + 1))
+            MINOR=0
+            PATCH=0
+          elif [ "$LEVEL" = "minor" ]; then
+            MINOR=$((MINOR + 1))
+            PATCH=0
+          else
+            PATCH=$((PATCH + 1))
+          fi
+          
+          NEXT_VERSION="$MAJOR.$MINOR.$PATCH"
+          NEXT_TAG="v$NEXT_VERSION"
+          
+          echo "next_version=$NEXT_VERSION" >> $GITHUB_OUTPUT
+          echo "next_tag=$NEXT_TAG" >> $GITHUB_OUTPUT
+          echo "Bumping $LEVEL: $TAG → $NEXT_TAG"
+
+      - name: Create and push annotated tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          NEW_TAG=${{ steps.semver.outputs.next_tag }}
+          git tag -a "$NEW_TAG" -m "Release $NEW_TAG (bumped ${{ inputs.level }})"
+          
+          git push origin "$NEW_TAG"
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+
+      - name: Summary
+        run: |
+          echo "✅ New tag ${{ steps.semver.outputs.next_tag }} created and pushed."
+          echo "Release workflow should now trigger automatically."
