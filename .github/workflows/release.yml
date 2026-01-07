@@ -7,87 +7,45 @@ on:
         description: 'The name of the package for artifact naming'
         required: true
         type: string
-      bump_type:
-        description: 'major, minor, or patch'
+      release_tag:
+        description: 'The Git tag to build and release (e.g. v1.2.3)'
         required: true
         type: string
-        default: 'patch'
-    secrets:
-      RETRACE_APP_ID:
-        required: true
-      RETRACE_PRIVATE_KEY:
-        required: true
 
 permissions:
-  id-token: write
-  contents: write
+  id-token: write      # For potential PyPI trusted publishing (if you add it later)
+  contents: write      # Needed for creating GitHub Releases
 
 jobs:
-  # --- NEW JOB: BUMP VERSION ---
-  bump_version:
-    name: Bump Version & Tag
-    runs-on: ubuntu-latest
-    outputs:
-      new_tag: ${{ steps.tag_output.outputs.tag }}
-    steps:
-      - name: Generate Retrace Bot Token
-        id: retrace-token
-        uses: actions/create-github-app-token@v1
-        with:
-          app-id: ${{ secrets.RETRACE_APP_ID }}
-          private-key: ${{ secrets.RETRACE_PRIVATE_KEY }}
-
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          token: ${{ steps.retrace-token.outputs.token }}
-          fetch-depth: 0
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Bump & Push
-        id: tag_output
-        run: |
-          pip install bump-my-version
-          git config --global user.name "${{ steps.retrace-token.outputs.app-slug }}[bot]"
-          git config --global user.email "${{ steps.retrace-token.outputs.app-slug }}[bot]@users.noreply.github.com"
-          
-          bump-my-version bump ${{ inputs.bump_type }}
-          
-          # Get the new tag name (assuming it starts with v)
-          NEW_TAG=$(git describe --tags --abbrev=0)
-          echo "tag=$NEW_TAG" >> $GITHUB_OUTPUT
-          
-          git push origin main --tags
-
-  # --- MODIFIED: FAST TEST ---
+  # --- QUICK TEST ON LINUX ---
   fast_test:
     name: Quick Test (Linux)
-    needs: [bump_version]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ needs.bump_version.outputs.new_tag }} # Test the bumped code
+          ref: ${{ inputs.release_tag }}
           submodules: recursive
+          fetch-depth: 0
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
           cache: 'pip'
-      - name: Install Build Deps
+
+      - name: Install Build & Test Dependencies
         run: pip install meson-python meson ninja pytest
+
       - name: Build & Install Extension
         run: pip install . --no-build-isolation
-      - name: Run Pytest
+
+      - name: Run Tests
         run: python -m pytest tests -vv -rs
 
-  # --- MODIFIED: BUILD WHEELS ---
+  # --- BUILD WHEELS ACROSS PLATFORMS ---
   build_wheels:
-    name: Build on ${{ matrix.os }}
-    needs: [bump_version, fast_test]
+    name: Build on ${{ matrix.os }} (Python ${{ matrix.python-version }})
+    needs: fast_test
     strategy:
       fail-fast: false
       matrix:
@@ -102,18 +60,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ needs.bump_version.outputs.new_tag }} # Build from the tag
+          ref: ${{ inputs.release_tag }}
           submodules: recursive
           fetch-depth: 0
+
       - name: Update submodules
         run: |
           git submodule sync --recursive
           git submodule update --init --recursive --remote
+
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+
       - name: Install build tools
         run: pip install cibuildwheel==2.21.3 meson-python meson ninja
+
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
@@ -122,15 +84,17 @@ jobs:
           CIBW_BEFORE_BUILD: pip install meson-python meson ninja
           CIBW_TEST_REQUIRES: pytest
           CIBW_TEST_COMMAND: pytest {project}/tests
+
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.package_name }}-${{ matrix.os }}-${{ matrix.python-version }}-wheels
           path: wheelhouse/*.whl
 
-  # --- MODIFIED: PUBLISH RELEASE ---
+  # --- PUBLISH GITHUB RELEASE ---
   publish_release:
-    needs: [bump_version, build_wheels]
+    name: Create GitHub Release
+    needs: build_wheels
     runs-on: ubuntu-latest
     steps:
       - name: Download all wheels
@@ -139,12 +103,14 @@ jobs:
           path: dist
           pattern: "*-wheels"
           merge-multiple: true
-      - name: Upload to GitHub Release
+
+      - name: Upload wheels to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ needs.bump_version.outputs.new_tag }}
-          name: Release ${{ needs.bump_version.outputs.new_tag }}
+          tag_name: ${{ inputs.release_tag }}
+          name: Release ${{ inputs.release_tag }}
           files: dist/*.whl
           make_latest: "true"
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
