@@ -67,7 +67,8 @@ jobs:
       - name: Update submodules
         run: |
           git submodule sync --recursive
-          git submodule update --init --recursive --remote
+          # git submodule update --init --recursive --remote
+          git submodule update --init --recursive
 
       - uses: actions/setup-python@v5
         with:
@@ -76,9 +77,15 @@ jobs:
       - name: Install build tools
         run: pip install cibuildwheel==2.21.3 meson-python meson ninja setuptools_scm
 
+      # - name: Set version
+      #   id: version
+      #   run: echo "version=${TAG#v}" >> $GITHUB_OUTPUT
+      #   env:
+      #     TAG: ${{ inputs.release_tag }}
+
       - name: Print version
         run: python -m setuptools_scm
-        
+
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
