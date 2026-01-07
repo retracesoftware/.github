@@ -83,6 +83,8 @@ jobs:
         run: pip install -e . --no-build-isolation
       - name: Run Pytest
         run: python -m pytest tests -vv
+        env:
+          PYTHONPATH: ${{ github.workspace }}
 
   # --- MODIFIED: BUILD WHEELS ---
   build_wheels:
