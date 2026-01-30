@@ -94,6 +94,8 @@ jobs:
           
       - name: Print version
         run: python -m setuptools_scm
+        env:
+          SETUPTOOLS_SCM_PRETEND_VERSION: ${{ inputs.release_tag }}
 
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
