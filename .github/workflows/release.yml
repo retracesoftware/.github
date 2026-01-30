@@ -104,7 +104,7 @@ jobs:
           CIBW_TEST_REQUIRES: pytest
           CIBW_TEST_COMMAND: pytest {project}/tests
           CIBW_CONFIG_SETTINGS: >-
-            ${{ inputs.build_debug && 'setup-args=--buildtype=debug' || '' }}
+            ${{ inputs.build_debug && 'setup-args=-Dbuildtype=debug' || '' }}
 
       - name: Upload wheels
         uses: actions/upload-artifact@v4
