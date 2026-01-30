@@ -88,6 +88,10 @@ jobs:
       #   env:
       #     TAG: ${{ inputs.release_tag }}
 
+      - name: Setup for debug build
+        if: ${{ inputs.debug_build }}
+        run: cp pyproject.debug.toml pyproject.toml
+          
       - name: Print version
         run: python -m setuptools_scm
 
