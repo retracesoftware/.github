@@ -102,7 +102,9 @@ jobs:
         env:
           SETUPTOOLS_SCM_PRETEND_VERSION: ${{ inputs.release_tag }}
           CIBW_BUILD: ${{ matrix.py-tag }}
-          CIBW_ENVIRONMENT: MESONPY_EDITABLE_VERBOSE=1
+          CIBW_ENVIRONMENT: >-
+            MESONPY_EDITABLE_VERBOSE=1
+            SETUPTOOLS_SCM_PRETEND_VERSION=${{ inputs.release_tag }}
           CIBW_BEFORE_BUILD: pip install meson-python meson ninja
           CIBW_TEST_REQUIRES: pytest
           CIBW_TEST_COMMAND: pytest {project}/tests
