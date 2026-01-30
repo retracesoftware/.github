@@ -89,7 +89,7 @@ jobs:
       #     TAG: ${{ inputs.release_tag }}
 
       - name: Setup for debug build
-        if: ${{ inputs.debug_build }}
+        if: ${{ inputs.build_debug }}
         run: cp pyproject.debug.toml pyproject.toml
           
       - name: Print version
@@ -104,7 +104,7 @@ jobs:
           CIBW_TEST_REQUIRES: pytest
           CIBW_TEST_COMMAND: pytest {project}/tests
           CIBW_CONFIG_SETTINGS: >-
-            ${{ inputs.build_debug && 'setup-args=--buildtype=debug' || 'setup-args=--buildtype=release' }}
+            ${{ inputs.build_debug && 'setup-args=--buildtype=debug' || '' }}
 
       - name: Upload wheels
         uses: actions/upload-artifact@v4
