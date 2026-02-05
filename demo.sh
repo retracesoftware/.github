@@ -121,6 +121,30 @@ else
 fi
 
 # ============================================================================
+# PART 4: AI-Driven Investigation (The "What Your Product Could Do" Moment)
+# ============================================================================
+
+echo ""
+read -p "   Press Enter to see AI-driven investigation..."
+echo ""
+
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "  PART 4: AI-Driven Investigation via MCP"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+echo "🤖 What if your AI coding assistant could do this automatically?"
+echo ""
+echo "   Instead of a human running investigation commands,"
+echo "   the AI queries Retrace MCP tools autonomously and"
+echo "   delivers the root cause in seconds."
+echo ""
+echo "   This is what Cursor, Copilot, or your AI assistant"
+echo "   could offer: \"Here's why your code leaked PII.\""
+echo ""
+
+python3 investigation/ai_investigation.py 2>&1
+
+# ============================================================================
 # SUMMARY
 # ============================================================================
 
@@ -147,6 +171,7 @@ echo "   ✓ MCP provenance queries (open_trace, inspect_stack, trace_provenance
 echo "   ✓ Crash-on-leak detection with breadcrumb locals"
 echo "   ✓ Automatic regression test generation"
 echo "   ✓ Complete audit trail for compliance"
+echo "   ✓ AI-native: LLMs query MCP tools for autonomous investigation"
 echo ""
 echo "╔══════════════════════════════════════════════════════════════╗"
 echo "║                      DEMO COMPLETE                           ║"
