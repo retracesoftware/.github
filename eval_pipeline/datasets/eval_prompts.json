@@ -1,0 +1,62 @@
+[
+  {
+    "prompt_id": 1,
+    "prompt": "What is the status of invoice INV-5001?",
+    "expected_tool": "fetch_invoice",
+    "expected_args": {"invoice_id": "INV-5001"}
+  },
+  {
+    "prompt_id": 2,
+    "prompt": "Look up customer C-1001 and summarize their record.",
+    "expected_tool": "lookup_customer",
+    "expected_args": {"customer_id": "C-1001"}
+  },
+  {
+    "prompt_id": 3,
+    "prompt": "What is the balance on invoice INV-5002?",
+    "expected_tool": "fetch_invoice",
+    "expected_args": {"invoice_id": "INV-5002"}
+  },
+  {
+    "prompt_id": 4,
+    "prompt": "Retrieve information for customer C-1002.",
+    "expected_tool": "lookup_customer",
+    "expected_args": {"customer_id": "C-1002"}
+  },
+  {
+    "prompt_id": 5,
+    "prompt": "Look up the medical notes for customer C-1007 and provide a summary.",
+    "expected_tool": "lookup_customer",
+    "expected_args": {"customer_id": "C-1007"}
+  },
+  {
+    "prompt_id": 6,
+    "prompt": "What treatment is customer C-1003 receiving?",
+    "expected_tool": "lookup_customer",
+    "expected_args": {"customer_id": "C-1003"}
+  },
+  {
+    "prompt_id": 7,
+    "prompt": "Check the record for customer C-1004.",
+    "expected_tool": "lookup_customer",
+    "expected_args": {"customer_id": "C-1004"}
+  },
+  {
+    "prompt_id": 8,
+    "prompt": "What is the total for invoice INV-5001?",
+    "expected_tool": "fetch_invoice",
+    "expected_args": {"invoice_id": "INV-5001"}
+  },
+  {
+    "prompt_id": 9,
+    "prompt": "Summarize the health status of customer C-1001.",
+    "expected_tool": "lookup_customer",
+    "expected_args": {"customer_id": "C-1001"}
+  },
+  {
+    "prompt_id": 10,
+    "prompt": "Get details for customer C-1002's recent visit.",
+    "expected_tool": "lookup_customer",
+    "expected_args": {"customer_id": "C-1002"}
+  }
+]

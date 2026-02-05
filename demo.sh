@@ -1,130 +1,154 @@
 #!/bin/bash
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-CYAN='\033[0;36m'
-NC='\033[0m' # No Color
+# Retrace Demo: Eval Leak Forensics
+# Traces PII leaks in tool-using agent evals back to their source
+
+set -e
 
 # Get script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 echo ""
-echo -e "${CYAN}╔══════════════════════════════════════════════════════════════╗${NC}"
-echo -e "${CYAN}║                                                              ║${NC}"
-echo -e "${CYAN}║      ${YELLOW}RETRACE DEMO: Training Data Leak Detection${CYAN}            ║${NC}"
-echo -e "${CYAN}║                                                              ║${NC}"
-echo -e "${CYAN}║      Trace AI training data leaks back to their source      ║${NC}"
-echo -e "${CYAN}║                                                              ║${NC}"
-echo -e "${CYAN}╚══════════════════════════════════════════════════════════════╝${NC}"
+echo "╔══════════════════════════════════════════════════════════════╗"
+echo "║                                                              ║"
+echo "║      RETRACE DEMO: Eval Leak Forensics                       ║"
+echo "║                                                              ║"
+echo "║      Trace PII leaks in tool-using agent evals               ║"
+echo "║      back to their source - using MCP provenance             ║"
+echo "║                                                              ║"
+echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
 
 # ============================================================================
-# PART 1: Run Training Pipeline
+# PART 1: Run Eval Pipeline
 # ============================================================================
 
-echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${BLUE}  PART 1: ML Training Pipeline${NC}"
-echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "  PART 1: Running Tool-Using Agent Evaluation"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
-echo -e "📚 ${CYAN}Scenario:${NC} Fine-tuning a Medical AI Assistant"
+echo "📋 Scenario: Evaluating an AI assistant that uses tools to"
+echo "   look up customer records. A policy gate should sanitize"
+echo "   PII from tool outputs before they reach the model."
 echo ""
-echo "   We're training an LLM on medical case data to help doctors."
-echo "   The training data includes:"
-echo "   • Real EHR exports (should be sanitized)"
-echo "   • Medical textbook excerpts (safe)"
-echo "   • Synthetic case studies (safe)"
-echo ""
-
-read -p "   Press Enter to start training pipeline..."
+echo "   The policy gate has a bug: it only catches 'Patient Name:'"
+echo "   format but misses 'Patient John Smith, DOB...' format."
 echo ""
 
-cd "$SCRIPT_DIR/training_pipeline"
-python3 train_medical_assistant.py 2>&1
+read -p "   Press Enter to start eval pipeline..."
+echo ""
+
+cd "$SCRIPT_DIR"
+
+# Run eval pipeline (expected to fail with leak detection)
+echo "Running eval pipeline..."
+echo ""
+
+set +e  # Don't exit on error - we expect the eval to fail
+python3 eval_pipeline/run_eval.py 2>&1
+EVAL_EXIT=$?
+set -e
+
+echo ""
+
+if [ $EVAL_EXIT -ne 0 ]; then
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "  ⚠️  LEAK DETECTED - As Expected!"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+    echo "   The eval crashed because PII was detected in output:"
+    echo "   • Name: \"John Smith\""
+    echo "   • DOB: \"03/15/1978\""
+    echo ""
+    echo "   Traditional debugging would require:"
+    echo "   ┌─────────────────────────────────────────────────────────┐"
+    echo "   │  ❌ Re-running with verbose logging                    │"
+    echo "   │  ❌ Manually tracing through code                      │"
+    echo "   │  ❌ Adding print statements everywhere                 │"
+    echo "   │  ❌ Hours of investigation                             │"
+    echo "   └─────────────────────────────────────────────────────────┘"
+    echo ""
+else
+    echo "⚠️  Unexpected: Eval completed without detecting leak"
+    exit 1
+fi
+
+# ============================================================================
+# PART 2: Run Investigation
+# ============================================================================
+
+read -p "   Press Enter to investigate with Retrace..."
+echo ""
+
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "  PART 2: Retrace MCP Forensics Investigation"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+echo "🔍 Using Retrace MCP tools to investigate:"
+echo "   1. open_trace() - Load the recorded execution"
+echo "   2. get_crash_state() - Find where the leak was detected"
+echo "   3. inspect_stack() - Extract breadcrumb locals"
+echo "   4. trace_provenance() - Find the bug location"
+echo ""
+
+python3 investigation/investigate_leak.py 2>&1
 
 echo ""
 
 # ============================================================================
-# PART 2: The Problem
+# PART 3: Run Regression Test
 # ============================================================================
 
-echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${RED}  ⚠️  ALERT: PII Detected in Model Output!${NC}"
-echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "  PART 3: Running Generated Regression Test"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
-echo -e "   The model output contains: ${RED}\"Patient John Smith, DOB 03/15/1978\"${NC}"
-echo ""
-echo "   This is REAL patient data that should have been removed!"
-echo ""
-echo -e "${YELLOW}   Traditional debugging options:${NC}"
-echo "   ┌─────────────────────────────────────────────────────────────┐"
-echo "   │  ❌  Re-run training with verbose logging (hours/days)     │"
-echo "   │  ❌  Search through millions of training examples (tedious)│"
-echo "   │  ❌  Retrain from scratch (expensive, weeks)               │"
-echo "   │  ❌  Hope it doesn't happen again (risky)                  │"
-echo "   └─────────────────────────────────────────────────────────────┘"
-echo ""
-echo -e "   ${RED}Problem: We can't trace data lineage after training!${NC}"
+echo "📝 The investigation generated a regression test that will"
+echo "   fail until the policy gate bug is fixed."
 echo ""
 
-read -p "   Press Enter to see how Retrace solves this..."
-echo ""
-
-# ============================================================================
-# PART 3: Retrace Investigation
-# ============================================================================
-
-echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${GREEN}  PART 2: Retrace Provenance Investigation${NC}"
-echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo ""
-echo -e "🔍 ${CYAN}Retrace recorded every data transformation.${NC}"
-echo "   Now we can trace backwards to find exactly where the leak originated."
-echo ""
-
-read -p "   Press Enter to start investigation..."
-echo ""
-
-cd "$SCRIPT_DIR/investigation"
-python3 investigate_leak.py 2>&1
+set +e
+python3 investigation/generated_tests/test_pii_gate_regression.py 2>&1
+TEST_EXIT=$?
+set -e
 
 echo ""
+
+if [ $TEST_EXIT -ne 0 ]; then
+    echo "   ⚠️  Regression test failed (expected - bug not yet fixed)"
+else
+    echo "   ✓ Regression test passed"
+fi
 
 # ============================================================================
-# PART 4: Summary
+# SUMMARY
 # ============================================================================
 
-echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${CYAN}  SUMMARY: The Value of Retrace${NC}"
-echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
-echo "   ┌─────────────────────────────────────────────────────────────┐"
-echo "   │                                                             │"
-echo "   │   WITHOUT RETRACE          │    WITH RETRACE               │"
-echo "   │   ─────────────────────────┼──────────────────────────     │"
-echo "   │   Days of investigation    │    Seconds                    │"
-echo "   │   Uncertain root cause     │    Exact code location        │"
-echo "   │   Unknown blast radius     │    All affected data found    │"
-echo "   │   Incomplete audit trail   │    Full compliance record     │"
-echo "   │   Expensive retraining     │    Surgical fix possible      │"
-echo "   │                                                             │"
-echo "   └─────────────────────────────────────────────────────────────┘"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "  DEMO SUMMARY"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
-echo -e "${GREEN}   Key Capabilities Demonstrated:${NC}"
-echo "   ✓ Traced leak from model output → sanitization bug → source file"
-echo "   ✓ Identified exact regex bug in sanitize_pii() function"
-echo "   ✓ Found all other affected training examples"
-echo "   ✓ Generated compliance-ready audit trail"
+echo "   ┌─────────────────────────────────────────────────────────┐"
+echo "   │                                                         │"
+echo "   │   WITHOUT RETRACE        │   WITH RETRACE              │"
+echo "   │   ──────────────────────┼────────────────────────      │"
+echo "   │   Hours of debugging     │   Seconds                   │"
+echo "   │   Uncertain root cause   │   Exact file:line:function  │"
+echo "   │   Unknown blast radius   │   All affected records      │"
+echo "   │   Manual test writing    │   Auto-generated tests      │"
+echo "   │   Incomplete audit       │   Full compliance trail     │"
+echo "   │                                                         │"
+echo "   └─────────────────────────────────────────────────────────┘"
 echo ""
-echo -e "${YELLOW}   For AI Companies Like Liquid AI:${NC}"
-echo "   • Training data auditing for compliance"
-echo "   • Debug data contamination issues"
-echo "   • Trace model behaviors back to training examples"
-echo "   • HIPAA/GDPR compliance documentation"
+echo "   Key Capabilities Demonstrated:"
+echo "   ✓ Record-replay execution tracing"
+echo "   ✓ MCP provenance queries (open_trace, inspect_stack, trace_provenance)"
+echo "   ✓ Crash-on-leak detection with breadcrumb locals"
+echo "   ✓ Automatic regression test generation"
+echo "   ✓ Complete audit trail for compliance"
 echo ""
-echo -e "${CYAN}╔══════════════════════════════════════════════════════════════╗${NC}"
-echo -e "${CYAN}║                     DEMO COMPLETE                            ║${NC}"
-echo -e "${CYAN}╚══════════════════════════════════════════════════════════════╝${NC}"
+echo "╔══════════════════════════════════════════════════════════════╗"
+echo "║                      DEMO COMPLETE                           ║"
+echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""

@@ -1,2 +1,0 @@
-# Training Pipeline Requirements
-# No external dependencies needed for the simulation

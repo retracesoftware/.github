@@ -2,218 +2,230 @@
 """
 Visualization Module
 
-Pretty-prints provenance chains and investigation results.
+Pretty-prints investigation results with tree structures and formatting.
 """
 
-from typing import List, Dict, Optional
+from typing import Dict, Any, List, Optional
 
 
 def print_header(title: str):
-    """Print a major section header"""
+    """Print a major section header."""
     width = 60
-    print("=" * width)
-    padding = (width - len(title)) // 2
-    print(" " * padding + title)
-    print("=" * width)
+    print("╔" + "═" * (width - 2) + "╗")
+    padding = (width - len(title) - 2) // 2
+    print("║" + " " * padding + title + " " * (width - padding - len(title) - 2) + "║")
+    print("╚" + "═" * (width - 2) + "╝")
 
 
 def print_section(title: str):
-    """Print a subsection header"""
+    """Print a subsection header."""
     print(f"▶ {title}")
-    print("-" * 40)
+    print("─" * 50)
 
 
-def format_provenance_chain(chain: List, leaked_value: str, leak_location: Dict) -> str:
-    """
-    Format provenance chain as a visual tree structure
+def format_crash_state(crash_state: Dict[str, Any]) -> str:
+    """Format the crash state information."""
+    if not crash_state:
+        return "❌ No crash state available"
     
-    Shows the complete data lineage from source to leak
-    """
     lines = []
-    
-    lines.append("📊 PROVENANCE CHAIN")
-    lines.append("=" * 50)
-    lines.append("")
-    lines.append(f"Leaked Value: \"{leaked_value}\"")
-    lines.append(f"Found in: model.generate() output")
-    lines.append("")
-    lines.append("Data Flow (traced backwards):")
+    lines.append("📊 CRASH STATE")
+    lines.append("═" * 50)
     lines.append("")
     
-    # Group events by operation type for clearer visualization
-    generate_events = [s for s in chain if "GENERATE" in s.operation]
-    train_events = [s for s in chain if "TRAIN" in s.operation]
-    sanitize_events = [s for s in chain if "SANITIZE" in s.operation]
-    preprocess_events = [s for s in chain if "PREPROCESS" in s.operation]
-    load_events = [s for s in chain if "LOAD" in s.operation]
+    crash_event = crash_state.get("crash_event", {})
     
-    # Format the tree
-    lines.append("└─ 🤖 MODEL OUTPUT [Generation]")
-    if generate_events:
-        gen = generate_events[0]
-        lines.append(f"   │  Step: {gen.step:,}")
-        lines.append(f"   │  Location: {gen.location}")
-        lines.append(f"   │  Output: \"{gen.output_preview[:60]}...\"")
-        if gen.metadata.get("leaked_from_index"):
-            lines.append(f"   │  ⚠ Data leaked from training index: {gen.metadata['leaked_from_index']}")
-    lines.append("   │")
+    lines.append(f"   Crash Step: {crash_state.get('crash_step', 'N/A')}")
+    lines.append(f"   Operation: {crash_event.get('operation', 'unknown')}")
+    lines.append(f"   Location: {crash_event.get('location', 'unknown')}")
+    lines.append(f"   Timestamp: {crash_event.get('timestamp', 'N/A')}")
     
-    lines.append("   └─ 📚 TRAINING BATCH [Model memorized this data]")
-    if train_events:
-        train = train_events[0]
-        lines.append(f"      │  Step: {train.step:,}")
-        lines.append(f"      │  Location: {train.location}")
-        lines.append(f"      │  Batch: {train.metadata.get('batch_num', 'N/A')}")
+    threads = crash_state.get("threads", [])
+    if threads:
+        lines.append("")
+        lines.append("   Threads:")
+        for t in threads:
+            lines.append(f"      [{t.get('thread_id')}] {t.get('name')} - {t.get('state')}")
+    
+    return "\n".join(lines)
+
+
+def format_stack_inspection(stack_info: Dict[str, Any], 
+                           breadcrumbs: Dict[str, Any]) -> str:
+    """Format the stack inspection results."""
+    if not stack_info:
+        return "❌ No stack information available"
+    
+    lines = []
+    lines.append("🔍 STACK INSPECTION")
+    lines.append("═" * 50)
+    lines.append("")
+    
+    frames = stack_info.get("frames", [])
+    
+    lines.append("   Call Stack:")
+    for frame in frames:
+        fn = frame.get("function", "unknown")
+        file = frame.get("file", "unknown")
+        line = frame.get("line", "?")
+        idx = frame.get("frame_index", 0)
+        marker = "→" if idx == 0 else " "
+        lines.append(f"   {marker} [{idx}] {fn}() at {file}:{line}")
+    
+    lines.append("")
+    lines.append("   Breadcrumb Locals (from crash frame):")
+    lines.append("   ┌────────────────────────────────────────────────┐")
+    
+    if breadcrumbs.get("leaked_value"):
+        lines.append(f"   │ leaked_value = \"{breadcrumbs['leaked_value']}\"")
+    if breadcrumbs.get("leaked_dob"):
+        lines.append(f"   │ leaked_dob = \"{breadcrumbs['leaked_dob']}\"")
+    if breadcrumbs.get("gate_version"):
+        lines.append(f"   │ gate_version = \"{breadcrumbs['gate_version']}\"")
+    if breadcrumbs.get("leak_source"):
+        src = breadcrumbs["leak_source"]
+        lines.append(f"   │ leak_source = {{")
+        lines.append(f"   │     source_file: \"{src.get('source_file')}\"")
+        lines.append(f"   │     record_id: {src.get('record_id')}")
+        lines.append(f"   │     patient_id: \"{src.get('patient_id')}\"")
+        lines.append(f"   │ }}")
+    if breadcrumbs.get("blast_radius_count"):
+        lines.append(f"   │ blast_radius_count = {breadcrumbs['blast_radius_count']}")
+    
+    lines.append("   └────────────────────────────────────────────────┘")
+    
+    return "\n".join(lines)
+
+
+def format_provenance_chain(provenance_info: Dict[str, Any]) -> str:
+    """Format the provenance chain as a tree."""
+    if not provenance_info:
+        return "❌ No provenance information available"
+    
+    lines = []
+    lines.append("🔗 PROVENANCE CHAIN")
+    lines.append("═" * 50)
+    lines.append("")
+    lines.append("   Data flow (traced backwards):")
+    lines.append("")
+    
+    chain = provenance_info.get("provenance_chain", [])
+    
+    # Build tree visualization
+    lines.append("   └─ 🚨 LEAK_DETECTED [Crash Point]")
     lines.append("      │")
     
-    lines.append("      └─ 🔓 SANITIZATION [Bug: PII not removed!]")
-    if sanitize_events:
-        for san in sanitize_events[:2]:  # Show first 2
-            lines.append(f"         │  Step: {san.step:,}")
-            lines.append(f"         │  Location: {san.location}")
-            if san.metadata.get("bug_missed"):
-                lines.append(f"         │  ❌ BUG: Input returned unchanged!")
-                lines.append(f"         │  Input:  \"{san.input_preview[:50]}...\"")
-                lines.append(f"         │  Output: \"{san.output_preview[:50]}...\"")
-    lines.append("         │")
+    for i, event in enumerate(chain):
+        op = event.get("operation", "unknown")
+        loc = event.get("location", "unknown").split(":")[-1] if event.get("location") else "unknown"
+        step = event.get("step", "?")
+        
+        if op == "LEAK_DETECTED":
+            continue  # Skip, already shown
+        
+        icon = "🔓" if "POLICY_GATE" in op else "🔧" if "TOOL" in op else "📝"
+        is_last = i == len(chain) - 1
+        connector = "└" if is_last else "├"
+        
+        lines.append(f"      {connector}─ {icon} {op} [step {step}]")
+        if not is_last:
+            lines.append("      │     │")
     
-    lines.append("         └─ 📂 DATA SOURCE [Origin of PII]")
-    if preprocess_events:
-        pre = preprocess_events[0]
-        lines.append(f"            │  Step: {pre.step:,}")
-        lines.append(f"            │  Source: {pre.metadata.get('source', 'unknown')}")
-        lines.append(f"            │  Index: {pre.metadata.get('index', 'N/A')}")
-    lines.append("            │")
-    lines.append("            └─ 📁 FILE: data/medical_cases.json")
-    lines.append("               │  Type: real_ehr_export")
-    lines.append("               │  Patient ID: P-447281")
-    lines.append("               │  Contains: Real patient PII")
-    lines.append("               └─ 🏥 Original: EHR System Export")
+    lines.append("")
+    lines.append(f"   Provenance hops: {provenance_info.get('provenance_hops', 1)}")
     
     return "\n".join(lines)
 
 
-def format_blast_radius(affected_examples: List[Dict]) -> str:
-    """
-    Show other examples affected by the same bug
-    """
+def format_root_cause(provenance_info: Dict[str, Any],
+                     source_context: Dict[str, Any]) -> str:
+    """Format the root cause analysis."""
     lines = []
-    
-    lines.append("💥 BLAST RADIUS ANALYSIS")
-    lines.append("=" * 50)
+    lines.append("🎯 ROOT CAUSE ANALYSIS")
+    lines.append("═" * 50)
     lines.append("")
     
-    if not affected_examples:
-        lines.append("✓ No other affected examples found")
+    root_cause = provenance_info.get("root_cause_location", {}) if provenance_info else {}
+    
+    if not root_cause:
+        lines.append("   ❌ Root cause not identified")
         return "\n".join(lines)
     
-    lines.append(f"⚠ Found {len(affected_examples)} other examples with same bug")
+    lines.append("   Bug Location:")
+    lines.append("   ┌────────────────────────────────────────────────┐")
+    lines.append(f"   │ File: {root_cause.get('file', 'unknown')}")
+    lines.append(f"   │ Function: {root_cause.get('function', 'unknown')}()")
+    lines.append(f"   │ Line: {root_cause.get('line', '?')}")
+    lines.append("   └────────────────────────────────────────────────┘")
     lines.append("")
     
-    # Count by type
-    lines.append("Impact Summary:")
-    lines.append(f"   • {len(affected_examples)} examples from real_ehr_export")
-    lines.append(f"   • All contain real patient identifiers")
-    lines.append(f"   • All were used in training batches")
+    # Show the buggy code
+    lines.append("   Buggy Code:")
+    lines.append("   ┌────────────────────────────────────────────────┐")
+    
+    if source_context and "lines" in source_context:
+        for line_info in source_context["lines"]:
+            line_num = line_info.get("line", "")
+            content = line_info.get("content", "")
+            marker = " → " if line_info.get("current") else "   "
+            lines.append(f"   │{marker}{line_num}: {content}")
+    else:
+        lines.append(f"   │ {root_cause.get('code', 'Code not available')}")
+    
+    lines.append("   └────────────────────────────────────────────────┘")
     lines.append("")
     
-    lines.append("Sample Affected Records:")
-    lines.append("-" * 40)
-    
-    # Show first 5 affected examples
-    for i, example in enumerate(affected_examples[:5]):
-        preview = example.get("preview", "")[:60]
-        idx = example.get("index", "N/A")
-        lines.append(f"   {i+1}. Index {idx}: \"{preview}...\"")
-    
-    if len(affected_examples) > 5:
-        lines.append(f"   ... and {len(affected_examples) - 5} more")
-    
-    lines.append("")
-    lines.append("Estimated Exposure:")
-    lines.append(f"   • Patient records: {len(affected_examples)}")
-    lines.append(f"   • Unique patients: {len(affected_examples)}")
-    lines.append(f"   • Data types: Names, DOB, Patient IDs, Medical history")
+    lines.append("   Explanation:")
+    lines.append(f"   {root_cause.get('explanation', 'No explanation available')}")
     
     return "\n".join(lines)
 
 
-def format_remediation(root_cause: Dict) -> str:
-    """
-    Generate remediation recommendations
-    """
+def format_blast_radius(breadcrumbs: Dict[str, Any]) -> str:
+    """Format the blast radius analysis."""
     lines = []
-    
-    lines.append("🔧 ROOT CAUSE & REMEDIATION")
-    lines.append("=" * 50)
+    lines.append("💥 BLAST RADIUS")
+    lines.append("═" * 50)
     lines.append("")
     
-    lines.append("Root Cause Identified:")
-    lines.append("-" * 40)
+    count = breadcrumbs.get("blast_radius_count", 0)
     
-    if root_cause.get("bug_description"):
-        for line in root_cause["bug_description"].split("\n"):
-            lines.append(f"   {line}")
+    if count == 0:
+        lines.append("   ✓ No additional affected records identified")
+        return "\n".join(lines)
     
+    lines.append(f"   ⚠ Found {count} other records affected by same bug")
     lines.append("")
-    lines.append("Code Location:")
-    lines.append("-" * 40)
-    
-    san_failure = root_cause.get("sanitization_failure", {})
-    if san_failure:
-        lines.append(f"   File: train_medical_assistant.py")
-        lines.append(f"   Function: sanitize_pii()")
-        lines.append(f"   Step: {san_failure.get('step', 'N/A')}")
-        lines.append("")
-        lines.append("   Buggy Code:")
-        lines.append("   ┌────────────────────────────────────────┐")
-        lines.append("   │ if \"Patient Name:\" in text:           │")
-        lines.append("   │     pattern = r\"Patient Name: [\\w\\s]+\" │")
-        lines.append("   │     # ❌ Misses \"Patient X, DOB...\"    │")
-        lines.append("   └────────────────────────────────────────┘")
-    
+    lines.append("   Affected records use the vulnerable format:")
+    lines.append("   'Patient [Name], DOB [Date]...' (missing 'Patient Name:' prefix)")
     lines.append("")
-    lines.append("Required Actions:")
-    lines.append("-" * 40)
-    lines.append("   ☐ 1. IMMEDIATE: Quarantine affected model")
-    lines.append("   ☐ 2. Fix sanitize_pii() regex patterns:")
-    lines.append("        - Add pattern for 'Patient [Name], DOB'")
-    lines.append("        - Add pattern for 'DOB MM/DD/YYYY'")
-    lines.append("        - Add pattern for inline Patient IDs")
-    lines.append("   ☐ 3. Retrain model without affected examples")
-    lines.append("   ☐ 4. Audit all real_ehr_export sources")
-    lines.append("   ☐ 5. Add validation layer:")
-    lines.append("        - No training text should match DOB patterns")
-    lines.append("        - No training text should match name patterns")
-    lines.append("   ☐ 6. Document incident for compliance")
-    
-    lines.append("")
-    lines.append("Compliance Notes:")
-    lines.append("-" * 40)
-    lines.append("   • HIPAA: Patient data exposure requires notification")
-    lines.append("   • Audit trail: This investigation provides full lineage")
-    lines.append("   • Retention: Preserve trace file for compliance records")
+    lines.append("   These records would also leak PII through the policy gate.")
     
     return "\n".join(lines)
 
 
-def format_summary_stats(investigation_time: float, events_analyzed: int) -> str:
-    """
-    Format investigation summary statistics
-    """
+def format_remediation(provenance_info: Dict[str, Any],
+                      breadcrumbs: Dict[str, Any]) -> str:
+    """Format remediation recommendations."""
     lines = []
+    lines.append("🔧 REMEDIATION REQUIRED")
+    lines.append("═" * 50)
+    lines.append("")
     
+    lines.append("   Immediate Actions:")
+    lines.append("   ┌────────────────────────────────────────────────┐")
+    lines.append("   │ ☐ 1. Quarantine affected eval outputs          │")
+    lines.append("   │ ☐ 2. Fix policy_gate.py regex patterns:        │")
+    lines.append("   │      - Add pattern for 'Patient [Name], DOB'   │")
+    lines.append("   │      - Add pattern for 'DOB [Date]' (no colon) │")
+    lines.append("   │ ☐ 3. Re-run affected evals after fix           │")
+    lines.append("   │ ☐ 4. Run generated regression test to verify   │")
+    lines.append("   └────────────────────────────────────────────────┘")
     lines.append("")
-    lines.append("📈 INVESTIGATION SUMMARY")
-    lines.append("=" * 50)
-    lines.append("")
-    lines.append(f"   Investigation time: {investigation_time:.2f} seconds")
-    lines.append(f"   Events analyzed: {events_analyzed:,}")
-    lines.append(f"   Root cause: IDENTIFIED")
-    lines.append(f"   Blast radius: CALCULATED")
-    lines.append(f"   Remediation: GENERATED")
-    lines.append("")
-    lines.append("   Without Retrace: Days of manual investigation")
-    lines.append("   With Retrace: Complete audit in seconds")
+    
+    lines.append("   Compliance Notes:")
+    lines.append("   • HIPAA: PII exposure detected - assess notification requirements")
+    lines.append("   • Audit: This investigation provides complete trace")
+    lines.append("   • Testing: Regression test generated to prevent recurrence")
     
     return "\n".join(lines)

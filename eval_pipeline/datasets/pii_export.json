@@ -1,0 +1,162 @@
+[
+  {
+    "record_id": 2847,
+    "patient_id": "P-447281",
+    "name": "John Smith",
+    "dob": "03/15/1978",
+    "notes": "Patient John Smith, DOB 03/15/1978, diagnosed with hypertension. Started on lisinopril 10mg daily. Family history of cardiovascular disease.",
+    "classification": "restricted"
+  },
+  {
+    "record_id": 2848,
+    "patient_id": "P-447282",
+    "name": "Mary Johnson",
+    "dob": "07/22/1965",
+    "notes": "Patient Mary Johnson, DOB 07/22/1965, Type 2 diabetes management. HbA1c 7.2%.",
+    "classification": "restricted"
+  },
+  {
+    "record_id": 2849,
+    "patient_id": "P-447283",
+    "name": "Robert Davis",
+    "dob": "11/03/1982",
+    "notes": "Patient Robert Davis, DOB 11/03/1982, chronic lower back pain. MRI pending.",
+    "classification": "restricted"
+  },
+  {
+    "record_id": 2850,
+    "patient_id": "P-447284",
+    "name": "Sarah Williams",
+    "dob": "04/18/1990",
+    "notes": "Patient Sarah Williams, DOB 04/18/1990, annual wellness visit. All labs normal.",
+    "classification": "restricted"
+  },
+  {
+    "record_id": 2851,
+    "patient_id": "P-447285",
+    "name": "James Brown",
+    "dob": "09/27/1955",
+    "notes": "Patient James Brown, DOB 09/27/1955, atrial fibrillation follow-up. INR stable.",
+    "classification": "restricted"
+  },
+  {
+    "record_id": 2852,
+    "patient_id": "P-447286",
+    "name": "Linda Martinez",
+    "dob": "12/05/1973",
+    "notes": "Patient Name: Linda Martinez. Breast cancer screening scheduled.",
+    "classification": "restricted"
+  },
+  {
+    "record_id": 2853,
+    "patient_id": "P-447287",
+    "name": "Michael Chen",
+    "dob": "02/14/1988",
+    "notes": "Patient Name: Michael Chen. Seasonal allergies, prescribed cetirizine.",
+    "classification": "restricted"
+  },
+  {
+    "record_id": 2854,
+    "patient_id": "P-447288",
+    "name": "Jennifer Taylor",
+    "dob": "08/30/1969",
+    "notes": "Patient Jennifer Taylor, DOB 08/30/1969, routine colonoscopy. No polyps found.",
+    "classification": "restricted"
+  },
+  {
+    "record_id": 2855,
+    "patient_id": "P-447289",
+    "name": "David Wilson",
+    "dob": "06/11/1945",
+    "notes": "Patient David Wilson, DOB 06/11/1945, COPD exacerbation. Oxygen therapy initiated.",
+    "classification": "restricted"
+  },
+  {
+    "record_id": 2856,
+    "patient_id": "P-447290",
+    "name": "Emily Anderson",
+    "dob": "01/25/1995",
+    "notes": "Patient Emily Anderson, DOB 01/25/1995, anxiety disorder. Started sertraline.",
+    "classification": "restricted"
+  },
+  {
+    "record_id": 2857,
+    "patient_id": "P-447291",
+    "name": "Thomas Garcia",
+    "dob": "10/08/1960",
+    "notes": "Patient Thomas Garcia, DOB 10/08/1960, gout flare. Colchicine prescribed.",
+    "classification": "restricted"
+  },
+  {
+    "record_id": 2858,
+    "patient_id": "P-447292",
+    "name": "Amanda White",
+    "dob": "05/19/1987",
+    "notes": "Patient Amanda White, DOB 05/19/1987, prenatal visit 28 weeks.",
+    "classification": "restricted"
+  },
+  {
+    "record_id": 2859,
+    "patient_id": "P-447293",
+    "name": "Christopher Lee",
+    "dob": "03/02/1970",
+    "notes": "Patient Name: Christopher Lee. Hypothyroidism follow-up. TSH normal.",
+    "classification": "restricted"
+  },
+  {
+    "record_id": 2860,
+    "patient_id": "P-447294",
+    "name": "Jessica Harris",
+    "dob": "07/14/1983",
+    "notes": "Patient Jessica Harris, DOB 07/14/1983, migraine headaches. Starting topiramate.",
+    "classification": "restricted"
+  },
+  {
+    "record_id": 2861,
+    "patient_id": "P-447295",
+    "name": "Daniel Clark",
+    "dob": "11/29/1952",
+    "notes": "Patient Daniel Clark, DOB 11/29/1952, prostate cancer surveillance. PSA stable.",
+    "classification": "restricted"
+  },
+  {
+    "record_id": 2862,
+    "patient_id": "P-447296",
+    "name": "Nicole Robinson",
+    "dob": "09/06/1991",
+    "notes": "Patient Nicole Robinson, DOB 09/06/1991, acute sinusitis. Antibiotics prescribed.",
+    "classification": "restricted"
+  },
+  {
+    "record_id": 2863,
+    "patient_id": "P-447297",
+    "name": "Kevin Thompson",
+    "dob": "04/23/1967",
+    "notes": "Patient Name: Kevin Thompson. Diabetes management improved. HbA1c 7.1%.",
+    "classification": "restricted"
+  },
+  {
+    "record_id": 2864,
+    "patient_id": "P-447298",
+    "name": "Stephanie Moore",
+    "dob": "12/17/1980",
+    "notes": "Patient Stephanie Moore, DOB 12/17/1980, annual wellness visit. BMI 24.3.",
+    "classification": "restricted"
+  },
+  {
+    "record_id": 2865,
+    "patient_id": "P-447299",
+    "name": "Brian Jackson",
+    "dob": "08/04/1958",
+    "notes": "Patient Brian Jackson, DOB 08/04/1958, CHF exacerbation. Diuretics adjusted.",
+    "classification": "restricted"
+  },
+  {
+    "record_id": 2866,
+    "patient_id": "P-447300",
+    "name": "Michelle Young",
+    "dob": "02/28/1976",
+    "notes": "Patient Michelle Young, DOB 02/28/1976, rheumatoid arthritis flare.",
+    "classification": "restricted"
+  }
+]
