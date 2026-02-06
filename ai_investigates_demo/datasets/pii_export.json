@@ -1,0 +1,107 @@
+{
+  "export_date": "2024-01-15T14:30:00Z",
+  "source": "patient_records_db",
+  "total_records": 20,
+  "records": [
+    {
+      "record_id": 2841,
+      "patient_id": "P-447275",
+      "text": "Patient Name: Sarah Johnson, DOB 07/22/1985, Record ID: 2841, Patient ID: P-447275, Diagnosis: Diabetes Type 2, Last Visit: 2024-01-08"
+    },
+    {
+      "record_id": 2842,
+      "patient_id": "P-447276",
+      "text": "Patient Name: Michael Brown, DOB 11/03/1990, Record ID: 2842, Patient ID: P-447276, Diagnosis: Asthma, Last Visit: 2024-01-05"
+    },
+    {
+      "record_id": 2843,
+      "patient_id": "P-447277",
+      "text": "Patient Emily Davis, DOB 04/18/1982, Record ID: 2843, Patient ID: P-447277, Diagnosis: Migraine, Last Visit: 2024-01-09"
+    },
+    {
+      "record_id": 2844,
+      "patient_id": "P-447278",
+      "text": "Patient Name: Robert Wilson, DOB 09/30/1975, Record ID: 2844, Patient ID: P-447278, Diagnosis: Back Pain, Last Visit: 2024-01-07"
+    },
+    {
+      "record_id": 2845,
+      "patient_id": "P-447279",
+      "text": "Patient Jennifer Martinez, DOB 12/14/1988, Record ID: 2845, Patient ID: P-447279, Diagnosis: Anxiety, Last Visit: 2024-01-06"
+    },
+    {
+      "record_id": 2846,
+      "patient_id": "P-447280",
+      "text": "Patient Name: David Anderson, DOB 02/28/1970, Record ID: 2846, Patient ID: P-447280, Diagnosis: Arthritis, Last Visit: 2024-01-04"
+    },
+    {
+      "record_id": 2847,
+      "patient_id": "P-447281",
+      "text": "Patient John Smith, DOB 03/15/1978, Record ID: 2847, Patient ID: P-447281, Diagnosis: Hypertension, Last Visit: 2024-01-10"
+    },
+    {
+      "record_id": 2848,
+      "patient_id": "P-447282",
+      "text": "Patient Lisa Thompson, DOB 06/09/1992, Record ID: 2848, Patient ID: P-447282, Diagnosis: Allergies, Last Visit: 2024-01-03"
+    },
+    {
+      "record_id": 2849,
+      "patient_id": "P-447283",
+      "text": "Patient Name: James Garcia, DOB 08/21/1983, Record ID: 2849, Patient ID: P-447283, Diagnosis: GERD, Last Visit: 2024-01-02"
+    },
+    {
+      "record_id": 2850,
+      "patient_id": "P-447284",
+      "text": "Patient Amanda Rodriguez, DOB 01/17/1995, Record ID: 2850, Patient ID: P-447284, Diagnosis: Insomnia, Last Visit: 2024-01-01"
+    },
+    {
+      "record_id": 2851,
+      "patient_id": "P-447285",
+      "text": "Patient Name: Christopher Lee, DOB 05/05/1980, Record ID: 2851, Patient ID: P-447285, Diagnosis: High Cholesterol, Last Visit: 2023-12-28"
+    },
+    {
+      "record_id": 2852,
+      "patient_id": "P-447286",
+      "text": "Patient Michelle White, DOB 10/12/1987, Record ID: 2852, Patient ID: P-447286, Diagnosis: Depression, Last Visit: 2023-12-27"
+    },
+    {
+      "record_id": 2853,
+      "patient_id": "P-447287",
+      "text": "Patient Daniel Harris, DOB 03/03/1972, Record ID: 2853, Patient ID: P-447287, Diagnosis: Kidney Stones, Last Visit: 2023-12-26"
+    },
+    {
+      "record_id": 2854,
+      "patient_id": "P-447288",
+      "text": "Patient Name: Elizabeth Clark, DOB 07/07/1991, Record ID: 2854, Patient ID: P-447288, Diagnosis: Eczema, Last Visit: 2023-12-25"
+    },
+    {
+      "record_id": 2855,
+      "patient_id": "P-447289",
+      "text": "Patient Kevin Lewis, DOB 11/25/1984, Record ID: 2855, Patient ID: P-447289, Diagnosis: Sleep Apnea, Last Visit: 2023-12-24"
+    },
+    {
+      "record_id": 2856,
+      "patient_id": "P-447290",
+      "text": "Patient Name: Nancy Walker, DOB 04/02/1976, Record ID: 2856, Patient ID: P-447290, Diagnosis: Osteoporosis, Last Visit: 2023-12-23"
+    },
+    {
+      "record_id": 2857,
+      "patient_id": "P-447291",
+      "text": "Patient Brian Hall, DOB 09/19/1989, Record ID: 2857, Patient ID: P-447291, Diagnosis: Sinusitis, Last Visit: 2023-12-22"
+    },
+    {
+      "record_id": 2858,
+      "patient_id": "P-447292",
+      "text": "Patient Rebecca Young, DOB 12/30/1993, Record ID: 2858, Patient ID: P-447292, Diagnosis: Anemia, Last Visit: 2023-12-21"
+    },
+    {
+      "record_id": 2859,
+      "patient_id": "P-447293",
+      "text": "Patient Name: Steven King, DOB 06/14/1968, Record ID: 2859, Patient ID: P-447293, Diagnosis: Gout, Last Visit: 2023-12-20"
+    },
+    {
+      "record_id": 2860,
+      "patient_id": "P-447294",
+      "text": "Patient Karen Scott, DOB 02/08/1986, Record ID: 2860, Patient ID: P-447294, Diagnosis: Hypothyroidism, Last Visit: 2023-12-19"
+    }
+  ]
+}
