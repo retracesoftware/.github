@@ -106,6 +106,15 @@ def pause(seconds: float = 0.8):
     """Pause for dramatic effect."""
     time.sleep(seconds)
 
+def presenter_break():
+    """Pause for presenter to narrate. Press Enter to continue."""
+    print()
+    print(f"{DIM}                                                    ▸ Press Enter to continue{RESET}")
+    input()
+    # Clear the prompt line after Enter is pressed
+    sys.stdout.write("\033[F\033[K")
+    sys.stdout.flush()
+
 # ============================================================================
 # Blast Radius Analysis
 # ============================================================================
@@ -170,9 +179,9 @@ def run_investigation():
     print(f"  It was recorded by Retrace. Now an AI investigator will use")
     print(f"  Retrace's MCP tools to find the root cause — autonomously.")
     print(f"{BOLD}{'═' * 70}{RESET}")
-    print()
 
-    pause(2.0)
+    # BREAK 1: After prologue — presenter sets the scene
+    presenter_break()
 
     # ==========================================================================
     # ACT 1: Orient — "What happened?"
@@ -214,6 +223,9 @@ def run_investigation():
     print_finding(f"Execution stopped at step {crash['crash_step']} with {crash['exception']['type']}", color=YELLOW)
     print_ai_continued("The leak occurred during prompt 5 processing.")
     print_ai_continued("Let me examine the call stack at this point.")
+
+    # BREAK 2: After crash state — "AI knows what, now watch it find why"
+    presenter_break()
 
     print_divider()
 
@@ -264,6 +276,9 @@ def run_investigation():
     print()
     print_ai_continued("Let me trace WHERE sanitized_result got its value...")
 
+    # BREAK 3: After identical-variables discovery — the "aha" moment
+    presenter_break()
+
     print_divider()
 
     # ==========================================================================
@@ -293,6 +308,9 @@ def run_investigation():
     print_ai_continued(f"{origin['file']} → {origin['function']}(), line {origin['line']}")
     print()
     print_ai_continued("Let me inspect that frame to see what happened...")
+
+    # BREAK 4: After trace_provenance finds line 28 — "six MCP calls"
+    presenter_break()
 
     # MCP: list_frames_at_step (policy gate step)
     print_mcp_call("list_frames_at_step", {"session_id": session_id, "step": 4510, "thread_id": 0})
@@ -346,6 +364,9 @@ def run_investigation():
     print(f"      The input text uses {RED}\"Patient John Smith, DOB...\"{RESET} format")
     print(f"      which does NOT match — so PII passes through unredacted.")
 
+    # BREAK 5: After seeing the regex — explain the mechanism
+    presenter_break()
+
     print_divider()
 
     # ==========================================================================
@@ -373,6 +394,9 @@ def run_investigation():
     print()
     print(f"      All {blast['at_risk_count']} records are at risk of PII exposure")
     print(f"      if processed through the current pipeline.")
+
+    # BREAK 6: After blast radius — the compliance hook
+    presenter_break()
 
     print_divider()
 
@@ -408,7 +432,9 @@ def run_investigation():
     print(f"   {BOLD}Remediation:{RESET}")
     print(f"      Update regex to also match: \"Patient <Name>, DOB\" format")
     print(f"      Example fix: r\"Patient\\s+([A-Z][a-z]+\\s+[A-Z][a-z]+)\"")
-    print()
+
+    # BREAK 7: Before tests run — set up the finale
+    presenter_break()
 
     # Run regression tests
     print(f"   {BOLD}Running regression tests against current policy_gate.py...{RESET}")
